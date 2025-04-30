@@ -22,12 +22,12 @@ export default function ManageProducts() {
         }
 
         const data = await res.json();
-        console.log("API Response:", data); // ✅ Debugging log
+        console.log("API Response:--->", data); // ✅ Debugging log
         // console.log("id is:-", id);
         // const products = Array.isArray(data) ? data : data.product ?? [];
 
         const products = Array.isArray(data) ? data : data.products;
-        console.log("Products:", products.length);
+        console.log("Products:----------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", products.length);
         if (!Array.isArray(products)) {
           throw new Error("Invalid API response format");
         }
@@ -60,7 +60,17 @@ export default function ManageProducts() {
           className="bg-white p-4 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300"
         >
           {/* Image Section */}
-          {product.images?.length < 0 ? (
+          <div className="relative w-full h-48 rounded-t-xl overflow-hidden"> 
+          <Image
+  src={product.images[0]}
+  alt={product.name}
+  fill
+  className="object-cover"
+  unoptimized
+/>
+</div>
+
+          {/* {product.images?.length < 0 ? (
             <div className="relative w-full h-48 rounded-t-xl overflow-hidden">
               <Image
                 src={product.images} // Display the first image
@@ -73,7 +83,7 @@ export default function ManageProducts() {
             <div className="w-full h-48 bg-gray-300 flex items-center justify-center rounded-t-xl">
               <span className="text-gray-500">No Image Available</span>
             </div>
-          )}
+          )} */}
 
           {/* Product Details */}
           <div className="p-4 text-center">

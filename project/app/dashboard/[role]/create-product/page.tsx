@@ -6,11 +6,13 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import {  useParams } from 'next/navigation';
 
+
 export default function CreateProduct() {
    const params = useParams();
   const router = useRouter();
   const roleParam = params.role;
 const role = Array.isArray(roleParam) ? roleParam[0] : roleParam || '';
+const [imageFiles, setImageFiles] = useState<FileList | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -59,14 +61,48 @@ const role = Array.isArray(roleParam) ? roleParam[0] : roleParam || '';
     e.preventDefault();
     
     try {
+      
+      // const res = await fetch('/api/auth/products', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify(formData),
+      // });
+      const data = new FormData();
+      data.append('name', formData.name);
+data.append('description', formData.description);
+data.append('price', formData.price);
+data.append('category', formData.category);
+data.append('moq', formData.moq);
+data.append('userRole', formData.userRole);
+data.append('specifications', JSON.stringify(formData.specifications));
+
+// Array.from(imageFiles).forEach((file) => {
+//   data.append('images', file);
+// });
+
+
+Object.entries(formData).forEach(([key, value]) => {
+  if (key === 'specifications') {
+    data.append(key, JSON.stringify(value)); // convert object to string
+  } else {
+    data.append(key, value as string); // cast to string for simple values
+  }
+});
+
+if (imageFiles) {
+  Array.from(imageFiles).forEach((file) => {
+    data.append('images', file); // actual image files
+  });
+}
+
       const res = await fetch('/api/auth/products', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: data,
       });
 
       if (!res.ok) {
-        throw new Error(`Failed to create product. Status: ${res.status}`);
+        // throw new Error(`Failed to create product. Status: ${res.status}`);
+        console.log("error in product");
       }
 
       router.push(`/dashboard/${role}/products`);
@@ -86,34 +122,43 @@ const role = Array.isArray(roleParam) ? roleParam[0] : roleParam || '';
 
         <form className="space-y-4" onSubmit={handleSubmit}>
           {/* Product Name */}
-          <input name="name" placeholder="Product Name" value={formData.name} onChange={handleChange} className="input-field" style={{border: '2px solid #ccc'}} required />
+          <input name="name" placeholder="Product Name" value={formData.name} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" style={{border: '2px solid #ccc'}} required />
 
           {/* Description */}
-          <textarea style={{border: '2px solid #ccc'}} name="description" placeholder="Description" value={formData.description} onChange={handleChange} className="input-field" required />
+          <textarea style={{border: '2px solid #ccc'}} name="description" placeholder="Description" value={formData.description} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required />
 
           {/* Price */}
-          <input style={{border: '2px solid #ccc'}} name="price" type="number" placeholder="Price" value={formData.price} onChange={handleChange} className="input-field" required />
+          <input style={{border: '2px solid #ccc'}} name="price" type="number" placeholder="Price" value={formData.price} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required />
 
           {/* Category */}
-          <input  style={{border: '2px solid #ccc'}}  name="category" placeholder="Category" value={formData.category} onChange={handleChange} className="input-field" required />
+          <input  style={{border: '2px solid #ccc'}}  name="category" placeholder="Category" value={formData.category} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required />
 
           {/* Minimum Order Quantity (MOQ) */}
-          <input style={{border: '2px solid #ccc'}}  name="moq" type="number" placeholder="Minimum Order Quantity (MOQ)" value={formData.moq} onChange={handleChange} className="input-field" required />
+          <input style={{border: '2px solid #ccc'}}  name="moq" type="number" placeholder="Minimum Order Quantity (MOQ)" value={formData.moq} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required />
 
           {/* Specifications */}
           <div style={{border: '2px solid #ccc'}} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <input style={{border: '2px solid #ccc'}} name="specifications.material" placeholder="Material" value={formData.specifications.material} onChange={handleChange} className="input-field" />
-            <input style={{border: '2px solid #ccc'}} name="specifications.weight" placeholder="Weight" value={formData.specifications.weight} onChange={handleChange} className="input-field" />
-            <input style={{border: '2px solid #ccc'}} name="specifications.dimensions" placeholder="Dimensions" value={formData.specifications.dimensions} onChange={handleChange} className="input-field" />
+            <input style={{border: '2px solid #ccc'}} name="specifications.material" placeholder="Material" value={formData.specifications.material} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+            <input style={{border: '2px solid #ccc'}} name="specifications.weight" placeholder="Weight" value={formData.specifications.weight} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+            <input style={{border: '2px solid #ccc'}} name="specifications.dimensions" placeholder="Dimensions" value={formData.specifications.dimensions} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
           </div>
 
           {/* Images */}
-          <div className="space-y-2">
+          {/* Image Upload */}
+            <input
+            type="file"
+            multiple
+            accept="image/*"
+            onChange={(e) => setImageFiles(e.target.files)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            />
+
+          {/* <div className="space-y-2">
             {formData.images.map((image, index) => (
-              <input key={index} style={{border: '2px solid #ccc'}} type="text" placeholder="Image URL" value={image} onChange={(e) => handleImageChange(index, e.target.value)} className="input-field" />
+              <input key={index} style={{border: '2px solid #ccc'}} type="text" placeholder="Image URL" value={image} onChange={(e) => handleImageChange(index, e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
             ))}
             <button type="button" style={{border: '2px solid #ccc'}} onClick={addImageField} className="btn-secondary">+ Add Another Image</button>
-          </div>
+          </div> */}
 
           {/* Submit Button */}
           <button type="submit" className="btn-primary w-full" style={{ marginTop: '1rem',backgroundColor: '#3b82f6' }}>Create Product</button>
@@ -268,31 +313,31 @@ const role = Array.isArray(roleParam) ? roleParam[0] : roleParam || '';
 // //           <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
 // //             <div>
 // //               <label className="block text-sm font-medium text-gray-700">Product Name</label>
-// //               <input {...register('name')} className="input-field" />
+// //               <input {...register('name')} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
 // //               {errors.name && <p className="error-text">{errors.name.message}</p>}
 // //             </div>
 
 // //             <div>
 // //               <label className="block text-sm font-medium text-gray-700">Description</label>
-// //               <textarea {...register('description')} className="input-field" />
+// //               <textarea {...register('description')} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
 // //               {errors.description && <p className="error-text">{errors.description.message}</p>}
 // //             </div>
 
 // //             <div>
 // //               <label className="block text-sm font-medium text-gray-700">Price</label>
-// //               <input {...register('price')} type="text" className="input-field" />
+// //               <input {...register('price')} type="text" className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
 // //               {errors.price && <p className="error-text">{errors.price.message}</p>}
 // //             </div>
 
 // //             <div>
 // //               <label className="block text-sm font-medium text-gray-700">Category</label>
-// //               <input {...register('category')} className="input-field" />
+// //               <input {...register('category')} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
 // //               {errors.category && <p className="error-text">{errors.category.message}</p>}
 // //             </div>
 
 // //             <div>
 // //               <label className="block text-sm font-medium text-gray-700">MOQ</label>
-// //               <input {...register('moq')} type="text" className="input-field" />
+// //               <input {...register('moq')} type="text" className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
 // //               {errors.moq && <p className="error-text">{errors.moq.message}</p>}
 // //             </div>
 
