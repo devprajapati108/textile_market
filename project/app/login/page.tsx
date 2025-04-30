@@ -21,34 +21,74 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+
   const onSubmit = async (data: LoginFormData) => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch('http://localhost:3000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       });
-
+  
       const result = await res.json();
       if (!res.ok) throw new Error(result.message);
-
-      // Store token (localStorage here; you can use cookies for more secure approach)
+  
+      // Save token
       localStorage.setItem('token', result.token);
-
-      // Decode role from token
-      const payload = JSON.parse(atob(result.token.split('.')[1]));
-      const role = payload.role;
-
-      // Redirect to role-based dashboard
-      router.push(`/dashboard/${role}`);
+  
+      // Delay decoding until after hydration
+      setTimeout(() => {
+        const payload = JSON.parse(atob(result.token.split('.')[1]));
+        const role = payload.role;
+        const userId = payload.userId;
+  
+        localStorage.setItem('role', role);
+        localStorage.setItem('userId', userId);
+  
+        router.push(`/dashboard/${role}`);
+      }, 0);
     } catch (err: any) {
       setError(err.message || 'Login failed');
     } finally {
       setLoading(false);
     }
   };
+  
+  // const onSubmit = async (data: LoginFormData) => {
+  //   setLoading(true);
+  //   setError('');
+  //   try {
+  //     const res = await fetch('/api/auth/login', {
+  //       method: 'POST',
+  //       headers: { 'Content-Type': 'application/json' },
+  //       body: JSON.stringify(data)
+  //     });
+
+  //     const result = await res.json();
+  //     if (!res.ok) throw new Error(result.message);
+
+  //     // Save token in localStorage
+  //     localStorage.setItem('token', result.token);
+
+  //     // Decode token to get user info
+  //     const payload = JSON.parse(atob(result.token.split('.')[1]));
+  //     const role = payload.role;
+  //     const userId = payload.userId;
+
+  //     // Optionally save role/userId in localStorage too
+  //     localStorage.setItem('role', role);
+  //     localStorage.setItem('userId', userId);
+
+  //     // Navigate to role-based dashboard
+  //     router.push(`/dashboard/${role}`);
+  //   } catch (err: any) {
+  //     setError(err.message || 'Login failed');
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   return (
     <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow">

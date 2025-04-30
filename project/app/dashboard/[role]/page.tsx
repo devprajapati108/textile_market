@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import {jwtDecode} from "jwt-decode";
 
 const roleSpecificContent = {
   manufacturer: {
@@ -42,20 +43,48 @@ const roleSpecificContent = {
   },
 };
 
+
 export default function Dashboard() {
   const params = useParams();
+  const router = useRouter();
   const role = params.role as keyof typeof roleSpecificContent;
   const content = roleSpecificContent[role];
-  const router = useRouter();
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
-    if (role === "manufacturer") {
-      fetch("/api/auth/products")
-        .then((res) => res.json())
-        .then((data) => setProducts(data));
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+      return;
     }
-  }, [role]);
+
+    try {
+      const decoded: any = jwtDecode(token);
+      const userRole = decoded.role?.toLowerCase();
+
+      // Redirect if role in token doesn't match URL role
+      if (userRole !== role) {
+        // router.push(`/dashboard/${userRole}`);
+        router.push("/login");
+        return;
+      }
+      console.log("token in login------>",token);
+
+      // If role is manufacturer, fetch products
+      if (userRole === "manufacturer") {
+        fetch("/api/auth/products", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+          .then((res) => res.json())
+          .then((data) => setProducts(data));
+      }
+    } catch (err) {
+      localStorage.removeItem("token");
+      router.push("/login");
+    }
+  }, [role, router]);
 
   if (!content) {
     return <div>Invalid role specified</div>;
@@ -87,13 +116,17 @@ export default function Dashboard() {
                           {feature === "Manage Products" && role === "manufacturer" ? (
                             <>
                               <button
-                                onClick={() => router.push(`/dashboard/${role}/products`)}
+                                onClick={() =>
+                                  router.push(`/dashboard/${role}/products`)
+                                }
                                 className="mt-4 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition"
                               >
                                 View Products
                               </button>
                               <button
-                                onClick={() => router.push(`/dashboard/${role}/create-product`)}
+                                onClick={() =>
+                                  router.push(`/dashboard/${role}/create-product`)
+                                }
                                 className="mt-4 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition ml-2"
                               >
                                 Create Product
@@ -115,6 +148,80 @@ export default function Dashboard() {
     </div>
   );
 }
+
+// export default function Dashboard() {
+//   const params = useParams();
+//   const role = params.role as keyof typeof roleSpecificContent;
+//   const content = roleSpecificContent[role];
+//   const router = useRouter();
+//   const [products, setProducts] = useState([]);
+
+//   useEffect(() => {
+//     if (role === "manufacturer") {
+//       fetch("/api/auth/products")
+//         .then((res) => res.json())
+//         .then((data) => setProducts(data));
+//     }
+//   }, [role]);
+
+//   if (!content) {
+//     return <div>Invalid role specified</div>;
+//   }
+
+//   return (
+//     <div className="min-h-screen bg-gray-100">
+//       <header className="bg-white shadow">
+//         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+//           <h1 className="text-3xl font-bold text-gray-900">{content.title}</h1>
+//         </div>
+//       </header>
+//       <main>
+//         <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+//           <div className="px-4 py-6 sm:px-0">
+//             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+//               {content.features.map((feature) => (
+//                 <div
+//                   key={feature}
+//                   className="bg-white overflow-hidden shadow rounded-lg p-5"
+//                 >
+//                   <div className="flex flex-col items-center text-center">
+//                     <dl>
+//                       <dt className="text-sm font-medium text-gray-500 truncate">
+//                         {feature}
+//                       </dt>
+//                       <dd className="flex items-baseline">
+//                         <div className="text-2xl font-semibold text-gray-900">
+//                           {feature === "Manage Products" && role === "manufacturer" ? (
+//                             <>
+//                               <button
+//                                 onClick={() => router.push(`/dashboard/${role}/products`)}
+//                                 className="mt-4 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition"
+//                               >
+//                                 View Products
+//                               </button>
+//                               <button
+//                                 onClick={() => router.push(`/dashboard/${role}/create-product`)}
+//                                 className="mt-4 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition ml-2"
+//                               >
+//                                 Create Product
+//                               </button>
+//                             </>
+//                           ) : (
+//                             "Coming Soon"
+//                           )}
+//                         </div>
+//                       </dd>
+//                     </dl>
+//                   </div>
+//                 </div>
+//               ))}
+//             </div>
+//           </div>
+//         </div>
+//       </main>
+//     </div>
+//   );
+// }
 
 
 // "use client";
